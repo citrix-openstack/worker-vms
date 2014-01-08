@@ -1,0 +1,41 @@
+#!/bin/bash
+set -eu
+
+
+THISDIR=$(dirname $(readlink -f $0))
+LIBDIR=$(cd $THISDIR && cd .. && cd lib && pwd)
+
+. $LIBDIR/functions.sh
+
+load_config
+
+set +u
+VDI="$1"
+RAM_GB="$2"
+VM_NAME="$3"
+set -u
+
+USAGE="$0 HARD_DRIVE RAM_GB NAME"
+
+[ -z "$VDI" ] && die_with << EOF
+ERROR: Please specify the hard drive to use
+$USAGE
+EOF
+
+[ -z "$RAM_GB" ] && die_with << EOF
+ERROR: Please specify the amount of memory for the VM
+$USAGE
+EOF
+
+[ -z "$VM_NAME" ] && die_with << EOF
+ERROR: Please specify a name for the VM
+$USAGE
+EOF
+
+VM=$(cat $LIBDIR/create_ubuntu_vm_with_vdi.sh |
+    bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
+    "$VDI" \
+    "${RAM_GB}GiB" \
+    "$VM_NAME")
+
+echo "$VM"
