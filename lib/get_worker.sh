@@ -10,7 +10,7 @@ IMAGENAME="${3:-slave}"
 
 function main() {
     launch_vm > /dev/null
-    echo "ubuntu@$SLAVE_IP"
+    echo "$SLAVE_IP"
 }
 
 function launch_vm() {
