@@ -1,0 +1,23 @@
+#!/bin/bash
+set -eu
+
+THISDIR=$(dirname $(readlink -f $0))
+LIBDIR=$(cd $THISDIR && cd .. && cd lib && pwd)
+
+. $LIBDIR/functions.sh
+
+load_config
+
+if ! cat $LIBDIR/list_disks.sh |
+    bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
+    "$WORKER_VM_NAME" | grep -q 1; then
+    die_with << EOF
+ERROR: It seems that the VM does not have a second hdd
+EOF
+fi
+
+VDI=$(cat $LIBDIR/detach_xvdb.sh |
+    bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
+    "$WORKER_VM_NAME")
+
+echo "$VDI"
