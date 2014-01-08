@@ -33,3 +33,5 @@ cat $LIBDIR/add_vdi_as_xvdb.sh |
     bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
     "$VDI" \
     "$WORKER_VM_NAME"
+
+echo "$VDI"
