@@ -1,0 +1,23 @@
+#!/bin/bash
+
+set -eu
+
+THISDIR=$(dirname $(readlink -f $0))
+LIBDIR=$(cd $THISDIR && cd .. && cd lib && pwd)
+
+. $LIBDIR/functions.sh
+
+load_config
+
+set +u
+VM="$1"
+set -u
+
+[ -z "$VM" ] && die_with << EOF
+ERROR: Please specify the VM
+EOF
+
+cat $LIBDIR/update_worker_image.sh |
+    bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
+    "$VM" \
+    "$WORKER_VM_XVA"
