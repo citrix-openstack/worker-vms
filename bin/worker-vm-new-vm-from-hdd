@@ -32,8 +32,10 @@ ERROR: Please specify a name for the VM
 $USAGE
 EOF
 
-cat $LIBDIR/create_ubuntu_vm_with_vdi.sh |
+VM=$(cat $LIBDIR/create_ubuntu_vm_with_vdi.sh |
     bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
     "$VDI" \
     "${RAM_GB}GiB" \
-    "$VM_NAME"
+    "$VM_NAME")
+
+echo "$VM"
