@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eux
+set -eu
 
 NETWORKING="$1"
 SLAVENAME="$2"
@@ -7,6 +7,65 @@ IMAGE_LOCATION="$3"
 
 FRESHSLAVE="${SLAVENAME}-fresh"
 IMAGENAME="${3:-slave}"
+
+function main() {
+    launch_vm > /dev/null
+    echo "ubuntu@$SLAVE_IP"
+}
+
+function launch_vm() {
+    if [ -z "$(xe snapshot-list name-label="$FRESHSLAVE" --minimal)" ]
+    then
+        log "snapshot $FRESHSLAVE not found, importing xva"
+        xe vm-uninstall vm="$SLAVENAME" force=true || true
+        import_vm
+        xe vm-param-set uuid="$VM" name-label="$SLAVENAME"
+
+        xe vm-snapshot vm="$SLAVENAME" new-name-label="$FRESHSLAVE"
+    fi
+
+    log "reverting snapshot $FRESHSLAVE"
+    SNAP=$(xe snapshot-list name-label="$FRESHSLAVE" --minimal)
+    xe snapshot-revert snapshot-uuid=$SNAP
+
+    VM=$(xe vm-list name-label="$SLAVENAME" --minimal)
+
+    log "wipe networking"
+    wipe_networking $VM
+
+    log "setting up networking"
+    setup_networking $VM "$NETWORKING"
+
+    log "starting VM"
+    xe vm-start uuid=$VM
+
+    while [ "$(xe vm-param-get uuid=$VM param-name=power-state)" != "running" ];
+    do
+        sleep 1
+    done
+
+    log "waiting for IP address on interface 0"
+    while true
+    do
+        SLAVE_IP=$(xe vm-param-get uuid=$VM param-name=networks | sed -ne 's,^.*0/ip: \([0-9.]*\).*$,\1,p')
+        if [ -n "$SLAVE_IP" ]; then
+            break
+        fi
+        sleep 1
+    done
+}
+
+function log() {
+    local message
+
+    message="$@"
+    echo "$message" >&2
+}
+
+function die_with() {
+    cat >&2
+    exit 1
+}
 
 function resolve_to_network() {
     local name_or_bridge
@@ -20,8 +79,9 @@ function resolve_to_network() {
     fi
 
     if [ -z "$result" ]; then
-        echo "No network found with name-label/bridge $name_or_bridge" >&2
-        exit 1
+        die_with << EOF
+ERROR: No network found with name-label/bridge $name_or_bridge
+EOF
     fi
 
     echo "$result"
@@ -58,10 +118,13 @@ function setup_networking() {
         device=$(echo $netconfig | cut -d"=" -f 1)
         netname=$(echo $netconfig | cut -d"=" -f 2)
 
+        log "connectiong network interface $device to $netname"
+
         net=$(resolve_to_network $netname)
-        if ! xe vif-create device=$device vm-uuid=$vm network-uuid=$net >/dev/null; then
-            echo "Failed to create network interface" >&2
-            exit 1
+        if ! xe vif-create device=$device vm-uuid=$vm network-uuid=$net; then
+            die_with << EOF
+ERROR: Failed to create network interface
+EOF
         fi
     done
     unset IFS
@@ -90,37 +153,11 @@ function import_vm() {
         VM=$(xe vm-import filename="$tmpdir/$image_filename")
         umount $tmpdir
     else
-        exit 1
+        die_with << EOF
+ERROR: unrecognised protocol: $protocol specified by: $IMAGE_LOCATION
+EOF
     fi
 }
 
-if [ -z "$(xe snapshot-list name-label="$FRESHSLAVE" --minimal)" ]
-then
-    xe vm-uninstall vm="$SLAVENAME" force=true || true
-    import_vm 
-    xe vm-param-set uuid="$VM" name-label="$SLAVENAME"
 
-    xe vm-snapshot vm="$SLAVENAME" new-name-label="$FRESHSLAVE" > /dev/null
-fi
-
-SNAP=$(xe snapshot-list name-label="$FRESHSLAVE" --minimal)
-xe snapshot-revert snapshot-uuid=$SNAP
-
-VM=$(xe vm-list name-label="$SLAVENAME" --minimal)
-
-wipe_networking $VM
-setup_networking $VM "$NETWORKING"
-
-xe vm-start uuid=$VM
-
-while [ "$(xe vm-param-get uuid=$VM param-name=power-state)" != "running" ];
-do
-    sleep 1
-done
-
-while true
-do
-    SLAVE_IP=$(xe vm-param-get uuid=$VM param-name=networks | sed -ne 's,^.*0/ip: \([0-9.]*\).*$,\1,p')
-    [ -z "$SLAVE_IP" ] || { echo "ubuntu@$SLAVE_IP"; exit 0; }
-    sleep 1
-done
+main
