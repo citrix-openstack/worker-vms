@@ -9,7 +9,7 @@ LIBDIR=$(cd $THISDIR && cd .. && cd lib && pwd)
 load_config
 
 VM_IP=$(cat $LIBDIR/get_worker.sh |
-    bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
+    remote-bash $WORKER_VM_XENSERVER \
     "$WORKER_VM_NETWORKING" \
     "$WORKER_VM_NAME" \
     "$WORKER_VM_XVA")

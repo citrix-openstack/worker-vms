@@ -18,5 +18,5 @@ ERROR: Please specify the VM
 EOF
 
 cat $LIBDIR/delete_vm.sh |
-    bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
+    remote-bash $WORKER_VM_XENSERVER \
     "$VM"
