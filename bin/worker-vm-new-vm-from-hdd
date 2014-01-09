@@ -33,7 +33,7 @@ $USAGE
 EOF
 
 VM=$(cat $LIBDIR/create_ubuntu_vm_with_vdi.sh |
-    bash $LIBDIR/remote_bash.sh $WORKER_VM_XENSERVER \
+    remote-bash $WORKER_VM_XENSERVER \
     "$VDI" \
     "${RAM_GB}GiB" \
     "$VM_NAME")
