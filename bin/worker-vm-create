@@ -8,7 +8,7 @@ LIBDIR=$(cd $THISDIR && cd .. && cd lib && pwd)
 
 load_config
 
-VM_IP=$(cat $LIBDIR/get_worker.sh |
+VM_IP=$(cat $LIBDIR/create_worker.sh |
     remote-bash $WORKER_VM_XENSERVER \
     "$WORKER_VM_NETWORKING" \
     "$WORKER_VM_NAME" \
