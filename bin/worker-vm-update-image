@@ -17,7 +17,7 @@ set -u
 ERROR: Please specify the VM
 EOF
 
-cat $LIBDIR/update_worker_image.sh |
-    remote-bash $WORKER_VM_XENSERVER \
+{ remote-bash-print remote_bash; cat $LIBDIR/update_worker_image.sh; } |
+    remote-bash-agentfw $WORKER_VM_XENSERVER \
     "$VM" \
     "$WORKER_VM_XVA"
