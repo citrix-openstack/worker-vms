@@ -1,0 +1,17 @@
+#!/bin/bash
+set -eu
+
+THISDIR=$(dirname $(readlink -f $0))
+LIBDIR=$(cd $THISDIR && cd .. && cd lib && pwd)
+
+. $LIBDIR/functions.sh
+
+load_config
+
+VM_IP=$(cat $LIBDIR/get_worker.sh |
+    remote-bash $WORKER_VM_XENSERVER \
+    "$WORKER_VM_NETWORKING" \
+    "$WORKER_VM_NAME" \
+    "$WORKER_VM_XVA")
+
+echo "$VM_IP"
