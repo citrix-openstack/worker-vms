@@ -41,7 +41,14 @@ function export_vm() {
 
         remote_host=$(echo "$IMAGE_LOCATION" | cut -d ":" -f 2)
         path_to_image=$(echo "$IMAGE_LOCATION" | cut -d ":" -f 3)
+
+        if ! echo "touch $path_to_image" | remote_bash "$remote_host"; then
+            die_with << EOF
+ERROR: Cannot access the location $IMAGE_LOCATION
+EOF
+        fi
         {
+            echo "set -eu"
             echo "dd of=$path_to_image"
             xe vm-export filename= compress=True uuid=$VM
         } | remote_bash "$remote_host"
@@ -50,6 +57,11 @@ function export_vm() {
 ERROR: unrecognised protocol: $protocol specified by: $IMAGE_LOCATION
 EOF
     fi
+}
+
+function die_with() {
+    cat >&2
+    exit 1
 }
 
 main
