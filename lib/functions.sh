@@ -12,6 +12,6 @@ ERROR: config file not found.
 either create $HOME/.worker-vms or set the WORKER_VM_CONFIG environment
 variable.
 EOF
-    MEMORY=1024
+    MEMORY="UNSPECIFIED"
     . "$config"
 }

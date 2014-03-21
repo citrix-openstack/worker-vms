@@ -36,13 +36,15 @@ function launch_vm() {
     log "setting up networking"
     setup_networking $VM "$NETWORKING"
 
-    log "Setting memory"
-    xe vm-memory-limits-set \
-        static-min=${MEMORY}MiB \
-        static-max=${MEMORY}MiB \
-        dynamic-min=${MEMORY}MiB \
-        dynamic-max=${MEMORY}MiB \
-        uuid=$VM
+    if [ "$MEMORY" != "UNSPECIFIED" ]; then
+        log "Setting memory"
+        xe vm-memory-limits-set \
+            static-min=${MEMORY}MiB \
+            static-max=${MEMORY}MiB \
+            dynamic-min=${MEMORY}MiB \
+            dynamic-max=${MEMORY}MiB \
+            uuid=$VM
+    fi
 
     log "starting VM"
     xe vm-start uuid=$VM
