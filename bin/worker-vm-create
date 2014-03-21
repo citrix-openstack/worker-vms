@@ -12,6 +12,7 @@ VM_IP=$(cat $LIBDIR/create_worker.sh |
     remote-bash $WORKER_VM_XENSERVER \
     "$WORKER_VM_NETWORKING" \
     "$WORKER_VM_NAME" \
-    "$WORKER_VM_XVA")
+    "$WORKER_VM_XVA" \
+    "$MEMORY")
 
 echo "$VM_IP"

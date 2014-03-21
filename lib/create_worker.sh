@@ -4,9 +4,9 @@ set -eu
 NETWORKING="$1"
 SLAVENAME="$2"
 IMAGE_LOCATION="$3"
+MEMORY="$4"
 
 FRESHSLAVE="${SLAVENAME}-fresh"
-IMAGENAME="${3:-slave}"
 
 function main() {
     launch_vm > /dev/null
@@ -35,6 +35,14 @@ function launch_vm() {
 
     log "setting up networking"
     setup_networking $VM "$NETWORKING"
+
+    log "Setting memory"
+    xe vm-memory-limits-set \
+        static-min=${MEMORY}MiB \
+        static-max=${MEMORY}MiB \
+        dynamic-min=${MEMORY}MiB \
+        dynamic-max=${MEMORY}MiB \
+        uuid=$VM
 
     log "starting VM"
     xe vm-start uuid=$VM
